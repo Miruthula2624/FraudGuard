@@ -1,0 +1,38 @@
+﻿# Environment & Secrets
+backend/.env
+.env
+*.env.local
+
+# Backend runtime & uploads
+backend/node_modules/
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/sessions/
+*.log
+
+# Frontend dependencies & build
+frontend/node_modules/
+frontend/dist/
+
+# Flutter / Android build outputs & caches
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/android/.gradle/
+mobile/android/local.properties
+**/app-release.apk
+
+# Python / ML artifacts & caches
+__pycache__/
+*.py[cod]
+*.class
+ml/__pycache__/
+.venv/
+venv/
+
+# OS / IDE metadata
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

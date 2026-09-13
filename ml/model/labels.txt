@@ -1,0 +1,9 @@
+fake_job
+genuine_job
+investment_scam
+legitimate_email
+legitimate_message
+lottery_scam
+romance_scam
+scam_email
+scam_message
