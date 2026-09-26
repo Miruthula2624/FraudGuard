@@ -10,21 +10,10 @@ const db = require('../config/db');
 const { analyzeScamContent } = require('../utils/analyzer');
 
 // ─────────────────────────────────────────────
-//  MULTER SETUP
+//  MULTER SETUP (memory storage — cloud safe)
 // ─────────────────────────────────────────────
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const uploadPath = path.join(__dirname, '../uploads');
-        if (!fs.existsSync(uploadPath)) fs.mkdirSync(uploadPath);
-        cb(null, uploadPath);
-    },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + '-' + file.originalname);
-    }
-});
-
 const upload = multer({
-    storage,
+    storage: multer.memoryStorage(),
     fileFilter: (req, file, cb) => {
         const allowedTypes = ['.jpg', '.jpeg', '.png', '.pdf'];
         const ext = path.extname(file.originalname).toLowerCase();
@@ -36,15 +25,16 @@ const upload = multer({
 // ─────────────────────────────────────────────
 //  ML API CALLER (Flask on port 5001)
 // ─────────────────────────────────────────────
-const ML_API_URL = 'http://127.0.0.1:5001/predict';
+const ML_API_URL = process.env.ML_API_URL || 'http://127.0.0.1:5001';
+const _mlUrl = new URL('/predict', ML_API_URL);
 
 function callMLApi(text) {
     return new Promise((resolve) => {
         const payload = JSON.stringify({ text });
         const options = {
-            hostname: '127.0.0.1',
-            port: 5001,
-            path: '/predict',
+            hostname: _mlUrl.hostname,
+            port: _mlUrl.port || (_mlUrl.protocol === 'https:' ? 443 : 80),
+            path: _mlUrl.pathname,
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -216,11 +206,10 @@ router.post('/file', auth, upload.single('file'), async (req, res) => {
     try {
         if (!req.file) return res.status(400).json({ message: 'File is required' });
 
-        const filePath = req.file.path;
         let extractedText = '';
 
         if (req.file.mimetype.startsWith('image/')) {
-            const { data: { text } } = await Tesseract.recognize(filePath, 'eng');
+            const { data: { text } } = await Tesseract.recognize(req.file.buffer, 'eng');
             extractedText = text;
         } else if (req.file.mimetype === 'application/pdf') {
             extractedText = 'PDF Content extraction not fully implemented. Please paste text for PDF analysis.';
@@ -249,7 +238,7 @@ router.post('/file', auth, upload.single('file'), async (req, res) => {
                     analysis.classification,
                     JSON.stringify(indicatorsToText(analysis.indicators)),
                     analysis.confidenceScore,
-                    req.file.filename
+                    req.file.originalname  // store original filename; no disk path in cloud
                 ]
             );
         } catch (dbErr) {
