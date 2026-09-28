@@ -11,7 +11,7 @@ class ApiConstants {
 
   // Development host definitions
   static const String emulatorHost = 'http://10.0.2.2:5000/api';
-  static const String physicalDeviceHost = 'http://10.179.156.42:5000/api';
+  static const String physicalDeviceHost = 'https://fraudguard-backend-86n8.onrender.com/api';
 
   /// Active base URL based on the selected environment
   static String get baseUrl {
