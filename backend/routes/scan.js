@@ -94,23 +94,56 @@ function mergeResults(ruleResult, mlResult) {
     };
 
     const mlConf = ml.confidence || 0;
-    const ruleConf = ruleResult.confidenceScore || 0;           // capped 0-100, used for display
-    const ruleRaw  = ruleResult.rawScore  ?? ruleConf;         // uncapped, used for blending
+    const ruleConf = ruleResult.confidenceScore || 0;           // capped 0-100, used for display and blending
 
-    // ─── Convert ML confidence to a scam-risk score for blending ────────────
-    // ML confidence = probability of its predicted class (e.g. 80% genuine_job).
-    // For genuine/legitimate labels this is NOT a scam score — it's the opposite.
-    //   genuine at 80%  → scam risk from ML = 100 - 80 = 20
-    // For scam labels it IS a scam risk score:
-    //   fake_job at 90% → scam risk from ML = 90
-    const genuineLabels = new Set(['genuine_job', 'legitimate_email', 'legitimate_message']);
-    const mlScamRisk = genuineLabels.has(ml.label) ? (100 - mlConf) : mlConf;
+    const scamLabels = new Set([
+        'fake_job', 'scam_message', 'scam_email',
+        'investment_scam', 'romance_scam', 'lottery_scam'
+    ]);
+    const genuineLabels = new Set([
+        'genuine_job', 'legitimate_email', 'legitimate_message'
+    ]);
 
-    // Weighted blend: 60% ML scam-risk + 40% rule raw score (uncapped)
-    // Using ruleRaw prevents the cap at 100 from masking a very high-confidence
-    // scam (e.g. raw=180) being pulled below the threshold by a disagreeing ML label.
-    // Clamp the final blended value to 100 for display.
-    const blendedScore = Math.min(Math.round(mlScamRisk * 0.60 + ruleRaw * 0.40), 100);
+    // ─── Calculate ML scam risk ──────────────────────────────────────────────
+    // When per-class probabilities are provided by the ML model, calculate the
+    // actual scam risk by summing the probabilities of all scam classes.
+    // This avoids treating the entire residual uncertainty of a genuine prediction
+    // as an affirmative scam signal in a multiclass (9-class) model.
+    let mlScamRisk;
+    if (ml.probabilities && typeof ml.probabilities === 'object' && Object.keys(ml.probabilities).length > 0) {
+        let scamProbSum = 0;
+        let totalProbSum = 0;
+        for (const [key, val] of Object.entries(ml.probabilities)) {
+            const num = Number(val);
+            if (!isNaN(num) && num >= 0) {
+                totalProbSum += num;
+                if (scamLabels.has(key)) {
+                    scamProbSum += num;
+                }
+            }
+        }
+        if (totalProbSum > 0) {
+            mlScamRisk = Math.round((scamProbSum / totalProbSum) * 100);
+        }
+    }
+
+    // Safe fallback when per-class probabilities are missing or malformed:
+    if (typeof mlScamRisk !== 'number') {
+        if (scamLabels.has(ml.label)) {
+            mlScamRisk = mlConf;
+        } else if (genuineLabels.has(ml.label)) {
+            // In the 9-class model, 6 of the 8 remaining non-predicted classes are scam.
+            // Allocate the residual uncertainty proportionately rather than assuming 100%.
+            mlScamRisk = Math.round((100 - mlConf) * (6 / 8));
+        } else {
+            mlScamRisk = mlConf;
+        }
+    }
+
+    // Weighted blend: 60% ML scam-risk + 40% rule score (strictly capped to 0-100)
+    // Both mlScamRisk (0-100) and ruleConf (0-100) are normalized so the rule
+    // engine cannot contribute more than its allocated 40% weight.
+    const blendedScore = Math.min(Math.round(mlScamRisk * 0.60 + ruleConf * 0.40), 100);
 
     // ─── Derive final classification from the BLENDED score ─────────────────
     // The blended score reflects the combined verdict of both engines.
