@@ -34,8 +34,8 @@ class HistoryService {
       }
 
       final items = rawData
-          .whereType<Map<String, dynamic>>()
-          .map((json) => ScanHistoryItem.fromJson(json))
+          .where((item) => item is Map)
+          .map((json) => ScanHistoryItem.fromJson(Map<String, dynamic>.from(json as Map)))
           .toList();
 
       return HistoryApiResponse(

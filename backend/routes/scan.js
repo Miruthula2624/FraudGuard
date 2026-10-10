@@ -93,27 +93,58 @@ function mergeResults(ruleResult, mlResult) {
         legitimate_message: '✅ Legitimate Message',
     };
 
-    const mlClassification = mlLabelMap[ml.label] || ml.display || ruleResult.classification;
     const mlConf = ml.confidence || 0;
-    const ruleConf = ruleResult.confidenceScore || 0;
+    const ruleConf = ruleResult.confidenceScore || 0;           // capped 0-100, used for display
+    const ruleRaw  = ruleResult.rawScore  ?? ruleConf;         // uncapped, used for blending
 
-    // Weighted blend: 60% ML + 40% rule engine
-    const blendedScore = Math.round(mlConf * 0.60 + ruleConf * 0.40);
+    // ─── Convert ML confidence to a scam-risk score for blending ────────────
+    // ML confidence = probability of its predicted class (e.g. 80% genuine_job).
+    // For genuine/legitimate labels this is NOT a scam score — it's the opposite.
+    //   genuine at 80%  → scam risk from ML = 100 - 80 = 20
+    // For scam labels it IS a scam risk score:
+    //   fake_job at 90% → scam risk from ML = 90
+    const genuineLabels = new Set(['genuine_job', 'legitimate_email', 'legitimate_message']);
+    const mlScamRisk = genuineLabels.has(ml.label) ? (100 - mlConf) : mlConf;
 
-    // Decision: if ML is highly confident (>= 75%), trust ML label
-    // Otherwise fall back to rule-based classification
-    const finalClassification = mlConf >= 65
-        ? mlClassification
-        : ruleResult.classification;
+    // Weighted blend: 60% ML scam-risk + 40% rule raw score (uncapped)
+    // Using ruleRaw prevents the cap at 100 from masking a very high-confidence
+    // scam (e.g. raw=180) being pulled below the threshold by a disagreeing ML label.
+    // Clamp the final blended value to 100 for display.
+    const blendedScore = Math.min(Math.round(mlScamRisk * 0.60 + ruleRaw * 0.40), 100);
 
-    // Merge content type
-    const mlTypeMap = {
-        genuine_job: 'job', fake_job: 'job', scam_email: 'email',
-        legitimate_email: 'email', scam_message: 'message',
-        legitimate_message: 'message', investment_scam: 'finance',
-        romance_scam: 'romance', lottery_scam: 'lottery'
-    };
-    const finalType = ml.label ? (mlTypeMap[ml.label] || ruleResult.contentType) : ruleResult.contentType;
+    // ─── Derive final classification from the BLENDED score ─────────────────
+    // The blended score reflects the combined verdict of both engines.
+    // Using the ML label alone when mlConf >= 65 caused contradictions:
+    // e.g. ML says "Genuine Job" (70%) but rule engine scores 100 (full scam)
+    // → blended = 82, which is clearly scam — the label must agree.
+    // We use the same thresholds as the rule engine (>=60 scam, >=20 suspicious)
+    // applied to the blended score, preserving the 60/40 hybrid intent.
+    const finalType = ml.label ? (
+        { genuine_job: 'job', fake_job: 'job', scam_email: 'email',
+          legitimate_email: 'email', scam_message: 'message',
+          legitimate_message: 'message', investment_scam: 'finance',
+          romance_scam: 'romance', lottery_scam: 'lottery' }[ml.label]
+        || ruleResult.contentType
+    ) : ruleResult.contentType;
+
+    let finalClassification;
+    if (blendedScore >= 60) {
+        if (finalType === 'email')        finalClassification = '❌ Scam Mail';
+        else if (finalType === 'message') finalClassification = '❌ Scam Message';
+        else if (finalType === 'finance') finalClassification = '❌ Investment Scam';
+        else if (finalType === 'romance') finalClassification = '❌ Romance / Social Scam';
+        else if (finalType === 'lottery') finalClassification = '❌ Lottery / Prize Scam';
+        else                              finalClassification = '❌ Fake Job / Scam';
+    } else if (blendedScore >= 20) {
+        if (finalType === 'email')        finalClassification = '⚠️ Suspicious Email';
+        else if (finalType === 'message') finalClassification = '⚠️ Suspicious Message';
+        else                              finalClassification = '⚠️ Suspicious Job Post';
+    } else {
+        if (finalType === 'job')          finalClassification = '✅ Genuine Job';
+        else if (finalType === 'email')   finalClassification = '✅ Legitimate Email';
+        else if (finalType === 'message') finalClassification = '✅ Legitimate Message';
+        else                              finalClassification = ruleResult.classification;
+    }
 
     // Add ML analysis as an indicator
     const mlIndicator = `🤖 ML Model (${ml.label?.replace(/_/g, ' ')}): ${mlConf}% confidence`;

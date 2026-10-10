@@ -1052,8 +1052,13 @@ const analyzeScamContent = (text) => {
         else classification = '⚠️ Unrecognized Content';
     }
 
-    // Normalize confidence score to 0–100
+    // Normalize confidence score to 0–100 for display
     const confidenceScore = Math.min(score, 100);
+    // rawScore is the uncapped accumulation used internally for blending.
+    // It can exceed 100 when many patterns match, which is intentional:
+    // a raw score of 150 is meaningfully "more scam" than 60, and this
+    // information is lost if we only expose the capped value to mergeResults.
+    const rawScore = score;
 
     // --- Step 7: Build Structured Explanation ---
     const explanation = buildStructuredExplanation({
@@ -1081,6 +1086,7 @@ const analyzeScamContent = (text) => {
         contentTypeLabel: contentTypeLabels[contentType],
         indicators,
         confidenceScore,
+        rawScore,
         companyName,
         appLink,
         extractedText: text,
