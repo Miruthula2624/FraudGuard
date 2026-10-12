@@ -51,7 +51,7 @@ const scamPatterns = {
         'laptop fee', 'laptop deposit', 'equipment fee', 'kit fee', 'starter kit fee',
         'id card fee', 'uniform fee', 'background check fee', 'certification fee',
         'activation fee', 'membership fee', 'joining fee', 'application fee',
-        'advance payment', 'refundable deposit', 'send money', 'wire money',
+        'advance payment', 'refundable deposit', 'deposit', 'send money', 'wire money',
         'payment', 'money', 'transfer money', 'bitcoin', 'crypto', 'cryptocurrency',
         'bank account', 'bank transfer', 'bank details', 'account number',
         'routing number', 'ifsc code', 'micr code', 'swift code',
@@ -868,6 +868,77 @@ const buildStructuredExplanation = ({
 };
 
 // =============================================================================
+//  PATTERN MATCHING HELPERS (Word-boundary & Negation context guards)
+// =============================================================================
+
+/**
+ * Checks if a pattern matches in text, enforcing whole-word boundaries for
+ * short/single-word tokens (<= 4 chars, e.g. "pin", "otp", "cvv", "ssn", "dob")
+ * to prevent substring false positives (e.g. "developing" matching "pin").
+ */
+const matchesWithBoundary = (text, pattern) => {
+    if (pattern.length <= 4 && /^\w+$/.test(pattern)) {
+        const regex = new RegExp(`\\b${pattern}\\b`, 'i');
+        return regex.test(text);
+    }
+    return text.toLowerCase().includes(pattern.toLowerCase());
+};
+
+/**
+ * Determines whether a specific occurrence of a money/fee phrase is negated
+ * (e.g. "There is no application fee or payment required", "never ask for deposit").
+ * Sentence boundaries and contrast conjunctions (e.g. "but", "however") reset scope
+ * so affirmative demands in compound sentences are NOT suppressed.
+ */
+const isOccurrenceNegated = (text, matchIndex) => {
+    const windowStart = Math.max(0, matchIndex - 80);
+    const preceding = text.slice(windowStart, matchIndex).toLowerCase();
+
+    // Sentence boundaries or contrast conjunctions that reset negation scope
+    const breakRegex = /(?:[.!?;]|\b(?:but|however|yet|instead|although|whereas)\b)/gi;
+    let lastBreak = -1;
+    let m;
+    while ((m = breakRegex.exec(preceding)) !== null) {
+        lastBreak = m.index + m[0].length;
+    }
+    const relevantClause = lastBreak !== -1 ? preceding.slice(lastBreak) : preceding;
+
+    // Negation qualifiers followed by intervening words / conjunctions
+    const negationRegex = /\b(?:no|not|never|without|zero|neither|free of|don't|dont|do not)\b(?:\s+(?:\w+|[,/]))*\s*$/i;
+    return negationRegex.test(relevantClause.trim());
+};
+
+/**
+ * Checks if a money/fee pattern has at least one affirmative (non-negated) occurrence.
+ * If every occurrence in the text is explicitly negated by a disclaimer, returns false.
+ */
+const matchesAffirmativeMoneyRequest = (text, pattern) => {
+    const lower = text.toLowerCase();
+    const patLower = pattern.toLowerCase();
+    let idx = lower.indexOf(patLower);
+    if (idx === -1) return false;
+
+    const isShortWord = pattern.length <= 4 && /^\w+$/.test(pattern);
+
+    while (idx !== -1) {
+        let isWordBoundaryOk = true;
+        if (isShortWord) {
+            const before = idx > 0 ? lower[idx - 1] : ' ';
+            const after = idx + pattern.length < lower.length ? lower[idx + pattern.length] : ' ';
+            if (/\w/.test(before) || /\w/.test(after)) {
+                isWordBoundaryOk = false;
+            }
+        }
+
+        if (isWordBoundaryOk && !isOccurrenceNegated(text, idx)) {
+            return true; // Found at least one affirmative (unnegated) match!
+        }
+        idx = lower.indexOf(patLower, idx + 1);
+    }
+    return false;
+};
+
+// =============================================================================
 //  MAIN ANALYSIS FUNCTION
 // =============================================================================
 const analyzeScamContent = (text) => {
@@ -914,15 +985,15 @@ const analyzeScamContent = (text) => {
         score += urgentMatches.length * 10;
     }
 
-    // Money / fee requests (20 pts each)
-    const moneyMatches = scamPatterns.moneyRequests.filter(p => lowerText.includes(p));
+    // Money / fee requests (20 pts each, with negation context guard)
+    const moneyMatches = scamPatterns.moneyRequests.filter(p => matchesAffirmativeMoneyRequest(text, p));
     if (moneyMatches.length > 0) {
         indicators.push(`💸 Requests for money / fees: ${moneyMatches.slice(0, 4).join(', ')}`);
         score += moneyMatches.length * 20;
     }
 
-    // Personal data requests (25 pts each)
-    const dataMatches = scamPatterns.personalData.filter(p => lowerText.includes(p));
+    // Personal data requests (25 pts each, with whole-word boundary guard for short tokens)
+    const dataMatches = scamPatterns.personalData.filter(p => matchesWithBoundary(text, p));
     if (dataMatches.length > 0) {
         indicators.push(`🔐 Requests sensitive data / OTP / credentials: ${dataMatches.slice(0, 4).join(', ')}`);
         score += dataMatches.length * 25;
