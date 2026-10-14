@@ -37,7 +37,7 @@ export default function Register() {
                             </Box>
                             <Typography variant="h5" sx={{ fontWeight: 900, fontFamily: 'Outfit, sans-serif', mb: 0.5, color: '#111111' }}>Create Account</Typography>
                             <Typography sx={{ color: '#888888', fontSize: '0.9rem' }}>
-                                Join <Box component="span" sx={{ color: '#f97316', fontWeight: 700 }}>TrustShield AI</Box> community
+                                Join <Box component="span" sx={{ color: '#f97316', fontWeight: 700 }}>ScamLens</Box> community
                             </Typography>
                         </Box>
 

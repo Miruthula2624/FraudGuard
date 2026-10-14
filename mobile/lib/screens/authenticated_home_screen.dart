@@ -17,7 +17,7 @@ class AuthenticatedHomeScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('FraudGuard'),
+        title: const Text('ScamLens'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -80,7 +80,7 @@ class AuthenticatedHomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Welcome back to FraudGuard Mobile',
+                'Welcome back to ScamLens Mobile',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),

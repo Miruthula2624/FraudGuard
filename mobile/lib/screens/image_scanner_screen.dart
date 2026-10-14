@@ -85,7 +85,7 @@ class _ImageScannerScreenState extends State<ImageScannerScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Upload a screenshot of an offer letter, chat message, or email. FraudGuard will extract the text via OCR and analyze it.',
+                'Upload a screenshot of an offer letter, chat message, or email. ScamLens will extract the text via OCR and analyze it.',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 16),

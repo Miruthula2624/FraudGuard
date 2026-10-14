@@ -27,8 +27,7 @@ export default function Landing({ user }) {
                             <SecurityIcon sx={{ color: 'white', fontSize: 20 }} />
                         </Box>
                         <Typography variant="h6" sx={{ fontWeight: 900, letterSpacing: '-0.02em', fontFamily: 'Outfit, sans-serif', color: '#111111' }}>
-                            Trust<span style={{ color: '#7c3aed' }}>Shield</span>{' '}
-                            <span style={{ color: '#f97316' }}>AI</span>
+                            Scam<span style={{ color: '#7c3aed' }}>Lens</span>
                         </Typography>
                     </Box>
                     <Stack direction="row" spacing={2} alignItems="center">
@@ -164,11 +163,10 @@ export default function Landing({ user }) {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1 }}>
                     <SecurityIcon sx={{ color: '#7c3aed', fontSize: 18 }} />
                     <Typography sx={{ fontWeight: 800, fontFamily: 'Outfit, sans-serif', color: '#111111' }}>
-                        Trust<span style={{ color: '#7c3aed' }}>Shield</span>{' '}
-                        <span style={{ color: '#f97316' }}>AI</span>
+                        Scam<span style={{ color: '#7c3aed' }}>Lens</span>
                     </Typography>
                 </Box>
-                <Typography sx={{ color: '#aaaaaa', fontSize: '0.85rem' }}>© 2026 TrustShield AI. Secure Your Career.</Typography>
+                <Typography sx={{ color: '#aaaaaa', fontSize: '0.85rem' }}>© 2026 ScamLens. See beyond the offer.</Typography>
             </Box>
         </Box>
     );

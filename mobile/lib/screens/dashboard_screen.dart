@@ -39,7 +39,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('FraudGuard Dashboard'),
+        title: const Text('ScamLens Dashboard'),
         automaticallyImplyLeading: false,
         actions: [
           IconButton(

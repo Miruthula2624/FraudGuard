@@ -36,7 +36,7 @@ export default function Login({ setUser }) {
                             </Box>
                             <Typography variant="h5" sx={{ fontWeight: 900, fontFamily: 'Outfit, sans-serif', mb: 0.5, color: '#111111' }}>Welcome Back</Typography>
                             <Typography sx={{ color: '#888888', fontSize: '0.9rem' }}>
-                                Sign in to <Box component="span" sx={{ color: '#7c3aed', fontWeight: 700 }}>TrustShield AI</Box>
+                                Sign in to <Box component="span" sx={{ color: '#7c3aed', fontWeight: 700 }}>ScamLens</Box>
                             </Typography>
                         </Box>
 

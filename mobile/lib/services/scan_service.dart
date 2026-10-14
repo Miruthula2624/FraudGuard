@@ -139,7 +139,7 @@ class ScanService {
       case DioExceptionType.receiveTimeout:
         return 'Scan timed out. The analysis service took too long to respond.';
       case DioExceptionType.connectionError:
-        return 'Unable to reach the FraudGuard scanning server. Please ensure the backend is running.';
+        return 'Unable to reach the ScamLens scanning server. Please ensure the backend is running.';
       case DioExceptionType.badResponse:
         final status = e.response?.statusCode;
         if (status == 400) return 'Invalid content or unsupported file format.';

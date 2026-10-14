@@ -355,7 +355,7 @@ class ScanResultScreen extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'Structured evidence and practical safety actions detected by FraudGuard',
+          'Structured evidence and practical safety actions detected by ScamLens',
           style: Theme.of(context).textTheme.bodyMedium,
         ),
         const SizedBox(height: 14),

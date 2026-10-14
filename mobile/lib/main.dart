@@ -15,18 +15,18 @@ void main() {
         ChangeNotifierProvider(create: (_) => ScanProvider()),
         ChangeNotifierProvider(create: (_) => HistoryProvider()),
       ],
-      child: const FraudGuardApp(),
+      child: const ScamLensApp(),
     ),
   );
 }
 
-class FraudGuardApp extends StatelessWidget {
-  const FraudGuardApp({super.key});
+class ScamLensApp extends StatelessWidget {
+  const ScamLensApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'FraudGuard',
+      title: 'ScamLens',
       theme: AppTheme.lightTheme,
       debugShowCheckedModeBanner: false,
       home: const AuthGate(),

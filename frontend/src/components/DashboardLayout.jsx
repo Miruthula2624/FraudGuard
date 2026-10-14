@@ -55,8 +55,7 @@ export default function DashboardLayout({ user, setUser }) {
                         <SecurityIcon sx={{ color: 'white', fontSize: 20 }} />
                     </Box>
                     <Typography sx={{ fontWeight: 900, fontSize: '1.1rem', fontFamily: 'Outfit, sans-serif', color: '#111111', letterSpacing: '-0.01em' }}>
-                        Trust<span style={{ color: '#7c3aed' }}>Shield</span>{' '}
-                        <span style={{ color: '#f97316' }}>AI</span>
+                        Scam<span style={{ color: '#7c3aed' }}>Lens</span>
                     </Typography>
                 </Box>
 
@@ -142,7 +141,7 @@ export default function DashboardLayout({ user, setUser }) {
                                 </Typography>
                             </Box>
                             <Typography sx={{ fontSize: '0.73rem', color: '#aaaaaa', fontWeight: 600, ml: '20px' }}>
-                                TrustShield AI — Intelligent Threat Monitor
+                                ScamLens — Intelligent Threat Monitor
                             </Typography>
                         </Box>
                         <Chip

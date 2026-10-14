@@ -45,7 +45,7 @@ class ScanScreen extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                'FraudGuard combines ML classification with expert heuristic rules to protect you against fraudulent offers and phishing.',
+                'ScamLens combines ML classification with expert heuristic rules to protect you against fraudulent offers and phishing.',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),

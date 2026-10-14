@@ -45,7 +45,7 @@ class ProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                user?.username ?? 'FraudGuard User',
+                user?.username ?? 'ScamLens User',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
@@ -109,7 +109,7 @@ class ProfileScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'FraudGuard Mobile',
+                            'ScamLens Mobile',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
@@ -139,7 +139,7 @@ class ProfileScreen extends StatelessWidget {
                     builder: (ctx) => AlertDialog(
                       title: const Text('Sign Out'),
                       content: const Text(
-                        'Are you sure you want to sign out of FraudGuard?',
+                        'Are you sure you want to sign out of ScamLens?',
                       ),
                       actions: [
                         TextButton(
