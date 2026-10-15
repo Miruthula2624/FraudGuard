@@ -554,7 +554,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(RegisterScreen), findsOneWidget);
-      expect(find.text('Join FraudGuard'), findsOneWidget);
+      expect(find.text('Join ScamLens'), findsOneWidget);
       expect(find.widgetWithText(ElevatedButton, 'Create Account'), findsOneWidget);
     });
 
@@ -1152,7 +1152,7 @@ void main() {
       await tester.tap(find.widgetWithText(ElevatedButton, 'Sign Out'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Are you sure you want to sign out of FraudGuard?'), findsOneWidget);
+      expect(find.text('Are you sure you want to sign out of ScamLens?'), findsOneWidget);
     });
   });
 }
