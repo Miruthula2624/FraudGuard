@@ -72,6 +72,18 @@ app.get('/', (req, res) => {
     res.send('Job Scam Detection API is running...');
 });
 
+// Global error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Unhandled server error:', err);
+    if (res.headersSent) {
+        return next(err);
+    }
+    const statusCode = err.status || err.statusCode || 500;
+    res.status(statusCode).json({
+        message: err.message || 'An internal server error occurred.'
+    });
+});
+
 app.listen(PORT, HOST, () => {
     console.log(`Server running on http://${HOST}:${PORT} (Port ${PORT})`);
 });

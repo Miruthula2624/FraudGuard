@@ -15,10 +15,14 @@ const { analyzeScamContent } = require('../utils/analyzer');
 const upload = multer({
     storage: multer.memoryStorage(),
     fileFilter: (req, file, cb) => {
-        const allowedTypes = ['.jpg', '.jpeg', '.png', '.pdf'];
+        const allowedTypes = ['.jpg', '.jpeg', '.png', '.webp', '.bmp', '.tiff', '.pdf'];
         const ext = path.extname(file.originalname).toLowerCase();
-        if (allowedTypes.includes(ext)) cb(null, true);
-        else cb(new Error('Only images and PDFs are allowed'));
+        const isImageOrPdfMime = file.mimetype && (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf');
+        if (allowedTypes.includes(ext) || isImageOrPdfMime) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only images (JPG, PNG, WebP) and PDFs are allowed'));
+        }
     }
 });
 
@@ -266,16 +270,30 @@ router.post('/text', auth, async (req, res) => {
 // ─────────────────────────────────────────────
 //  SCAN FILE (Image/PDF)
 // ─────────────────────────────────────────────
-router.post('/file', auth, upload.single('file'), async (req, res) => {
+router.post('/file', auth, (req, res, next) => {
+    upload.single('file')(req, res, (err) => {
+        if (err) {
+            if (err instanceof multer.MulterError) {
+                return res.status(400).json({ message: `File upload error: ${err.message}` });
+            }
+            return res.status(400).json({ message: err.message || 'Invalid file uploaded' });
+        }
+        next();
+    });
+}, async (req, res) => {
     try {
         if (!req.file) return res.status(400).json({ message: 'File is required' });
 
         let extractedText = '';
 
-        if (req.file.mimetype.startsWith('image/')) {
+        const ext = path.extname(req.file.originalname).toLowerCase();
+        const isImage = (req.file.mimetype && req.file.mimetype.startsWith('image/')) ||
+            ['.jpg', '.jpeg', '.png', '.webp', '.bmp', '.tiff'].includes(ext);
+
+        if (isImage) {
             const { data: { text } } = await Tesseract.recognize(req.file.buffer, 'eng');
             extractedText = text;
-        } else if (req.file.mimetype === 'application/pdf') {
+        } else if (req.file.mimetype === 'application/pdf' || ext === '.pdf') {
             extractedText = 'PDF Content extraction not fully implemented. Please paste text for PDF analysis.';
         }
 
