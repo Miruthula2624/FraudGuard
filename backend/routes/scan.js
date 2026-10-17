@@ -47,7 +47,8 @@ function callMLApi(text) {
             timeout: 5000
         };
 
-        const req = http.request(options, (res) => {
+        const client = _mlUrl.protocol === 'https:' ? require('https') : http;
+        const req = client.request(options, (res) => {
             let data = '';
             res.on('data', chunk => data += chunk);
             res.on('end', () => {
@@ -172,7 +173,7 @@ function mergeResults(ruleResult, mlResult) {
         else if (finalType === 'romance') finalClassification = '❌ Romance / Social Scam';
         else if (finalType === 'lottery') finalClassification = '❌ Lottery / Prize Scam';
         else                              finalClassification = '❌ Fake Job / Scam';
-    } else if (blendedScore >= 20) {
+    } else if (blendedScore >= 20 || (ruleResult.indicators && ruleResult.indicators.length > 0)) {
         if (finalType === 'email')        finalClassification = '⚠️ Suspicious Email';
         else if (finalType === 'message') finalClassification = '⚠️ Suspicious Message';
         else                              finalClassification = '⚠️ Suspicious Job Post';
@@ -298,8 +299,8 @@ router.post('/file', auth, (req, res, next) => {
         }
 
         const normalizedText = extractedText
-            .replace(/\r?\n|\r/g, ' ')
-            .replace(/\s+/g, ' ')
+            .replace(/\r\n/g, '\n')
+            .replace(/[ \t]+/g, ' ')
             .trim();
 
         const [ruleResult, mlResult] = await Promise.all([

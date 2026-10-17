@@ -894,8 +894,8 @@ const isOccurrenceNegated = (text, matchIndex) => {
     const windowStart = Math.max(0, matchIndex - 80);
     const preceding = text.slice(windowStart, matchIndex).toLowerCase();
 
-    // Sentence boundaries or contrast conjunctions that reset negation scope
-    const breakRegex = /(?:[.!?;]|\b(?:but|however|yet|instead|although|whereas)\b)/gi;
+    // Sentence boundaries, colons, line breaks, or contrast conjunctions that reset negation scope
+    const breakRegex = /(?:[\n.!?:;]|\b(?:but|however|yet|instead|although|whereas)\b)/gi;
     let lastBreak = -1;
     let m;
     while ((m = breakRegex.exec(preceding)) !== null) {
@@ -903,8 +903,8 @@ const isOccurrenceNegated = (text, matchIndex) => {
     }
     const relevantClause = lastBreak !== -1 ? preceding.slice(lastBreak) : preceding;
 
-    // Negation qualifiers followed by intervening words / conjunctions
-    const negationRegex = /\b(?:no|not|never|without|zero|neither|free of|don't|dont|do not)\b(?:\s+(?:\w+|[,/]))*\s*$/i;
+    // Negation qualifiers modifying the fee phrase (allows direct qualifiers, verbs, and compound lists)
+    const negationRegex = /\b(?:no|not|never|without|zero|neither|free\s+of|don't|dont|do\s+not)\b(?:\s+(?:charge|require|ask(?:\s+for)?|collect|demand|pay|take|accept|for|any|upfront|initial|hidden|advance|mandatory|recruitment|registration|such|other|extra|additional|fee|fees|deposit|deposits|money|security|charge|charges|payment|payments|costs?|or|and)\b|\s*[,/])*\s*$/i;
     return negationRegex.test(relevantClause.trim());
 };
 
@@ -1112,7 +1112,7 @@ const analyzeScamContent = (text) => {
         if (contentType === 'email') classification = '❌ Scam Mail';
         else if (contentType === 'message') classification = '❌ Scam Message';
         else classification = '❌ Fake Job / Scam';
-    } else if (score >= 20) {
+    } else if (score >= 20 || indicators.length > 0) {
         if (contentType === 'email') classification = '⚠️ Suspicious Email';
         else if (contentType === 'message') classification = '⚠️ Suspicious Message';
         else classification = '⚠️ Suspicious Job Post';
